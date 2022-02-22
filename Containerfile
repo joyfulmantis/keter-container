@@ -1,7 +1,8 @@
 FROM debian:bullseye as build
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
-    g++ gcc \
+    g++ \
+    gcc \
     libc6-dev \
     libffi-dev \
     libgmp-dev \
@@ -11,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     git \
     gnupg \
     netbase \
-    git \
     libpq-dev \
     curl
 RUN curl -sSL https://get.haskellstack.org/ | sh
@@ -24,14 +24,15 @@ RUN strip `stack --resolver=lts-18 exec -- which keter`
 RUN cp `stack --resolver=lts-18 exec -- which keter` ./dist
 RUN cp ./packaging/etc/keter-config.yaml ./dist
 FROM debian:bullseye
-RUN mkdir -p /opt/keter/bin && mkdir -p /opt/keter/etc && mkdir -p /opt/keter/incoming
+RUN mkdir -p /var/www/keter/bin && mkdir -p /var/www/keter/etc && mkdir -p /var/www/keter/incoming
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libgmp-dev \
-    postgresql-client
-COPY --from=build /keter/dist/keter /opt/keter/bin
-COPY --from=build /keter/dist/keter-config.yaml /opt/keter/etc
+    postgresql-client \
+    sudo
+COPY --from=build /keter/dist/keter /var/www/keter/bin
+COPY --from=build /keter/dist/keter-config.yaml /var/www/keter/etc
 EXPOSE 80
-VOLUME /opt/keter/incoming
-CMD /opt/keter/bin/keter /opt/keter/etc/keter-config.yaml
+VOLUME /var/www/keter/incoming
+CMD /var/www/keter/bin/keter /var/www/keter/etc/keter-config.yaml
