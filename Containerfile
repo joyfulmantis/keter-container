@@ -1,29 +1,14 @@
-FROM debian:bullseye as build
-ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    g++ \
-    gcc \
-    libc6-dev \
-    libffi-dev \
-    libgmp-dev \
-    make \
-    xz-utils \
-    zlib1g-dev \
-    git \
-    gnupg \
-    netbase \
-    libpq-dev \
-    curl
-RUN curl -sSL https://get.haskellstack.org/ | sh
+FROM haskell:9.6.2 as build
 RUN git clone https://github.com/snoyberg/keter.git
 WORKDIR keter
-RUN git checkout 088cdf64c4fcf7ac7049b4db503e7fa061ffd9f5
-RUN stack --resolver=lts-18 build
+RUN git checkout faedc34cce27057a47b05ee33ae4d7ddd3727b95
+Run cabal update
+RUN cabal build
 RUN mkdir -p dist
-RUN strip `stack --resolver=lts-18 exec -- which keter`
-RUN cp `stack --resolver=lts-18 exec -- which keter` ./dist
+RUN strip `cabal exec -- which keter`
+RUN cp `cabal exec -- which keter` ./dist
 RUN cp ./packaging/etc/keter-config.yaml ./dist
-FROM debian:bullseye
+FROM debian:buster
 RUN mkdir -p /var/www/keter/bin && mkdir -p /var/www/keter/etc && mkdir -p /var/www/keter/incoming
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
